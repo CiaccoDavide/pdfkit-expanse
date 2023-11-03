@@ -170,7 +170,7 @@ test("generate pdf", async () => {
           ],
         },
         chartConfiguration: {
-          type: "pie",
+          type: "doughnut",
           data: {
             labels: [
               "Milano",

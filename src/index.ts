@@ -86,8 +86,8 @@ export default class PdfGenerator {
     // let x = this.doc.x;
     let y = this.doc.y;
 
-    const chartWidth = 500;
-    const chartHeight = 500;
+    const chartWidth = 300;
+    const chartHeight = 300;
     const renderedChartWidth = CONTENT_WIDTH / 2;
     const renderedChartHeight = (chartHeight * renderedChartWidth) / chartWidth;
 
@@ -110,8 +110,8 @@ export default class PdfGenerator {
     // Render the chart to an SVG with chartjs-node-canvas
     const chartJSNodeCanvas = new ChartJSNodeCanvas({
       type: "svg",
-      width: chartWidth,
-      height: chartHeight,
+      width: chartWidth ,
+      height: chartHeight ,
     });
 
     const imageBuffer = chartJSNodeCanvas.renderToBufferSync({
