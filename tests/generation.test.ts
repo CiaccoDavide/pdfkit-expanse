@@ -1,6 +1,9 @@
 import { createWriteStream } from "fs";
 import PdfGenerator, { PdfGenerationSectionType } from "../src";
 
+const engineTypes = ["diesel", "petrol", "electric", "hybrid", "methane"];
+const worstCaseBenchmark = 20;
+
 test("generate pdf", async () => {
   const pdfGenerator = new PdfGenerator();
   const sections = [
@@ -135,6 +138,36 @@ test("generate pdf", async () => {
       },
     },
     {
+      type: PdfGenerationSectionType.TABLE,
+      options: {
+        table: {
+          title: "Gender distribution 2",
+          subtitle: "Office employees",
+          headers: ["Gender", "Employees"],
+          rows: [
+            ["Male", 189],
+            ["Female", 534],
+            ["Other", 237],
+          ],
+        },
+      },
+    },
+    {
+      type: PdfGenerationSectionType.TABLE,
+      options: {
+        table: {
+          title: "Gender distribution 2",
+          subtitle: "Office employees",
+          headers: ["Gender", "Employees"],
+          rows: [
+            ["Male", 189],
+            ["Female", 534],
+            ["Other", 237],
+          ],
+        },
+      },
+    },
+    {
       type: PdfGenerationSectionType.CHART,
       options: {
         table: {
@@ -221,6 +254,116 @@ test("generate pdf", async () => {
             ],
           },
           options: {},
+        },
+      },
+    },
+    {
+      type: PdfGenerationSectionType.TABLE,
+      options: {
+        table: {
+          headers: [
+            { label: "auto", property: "engineType", align: "center" },
+            { label: "", property: "co2Average", align: "center" },
+            { label: "car", property: "carCount", align: "center" },
+            { label: "vs PY", property: "carCountVsPY", align: "center" },
+            { label: "recorded km", property: "recordedKm", align: "center" },
+            {
+              label: "generated CO2 (g)",
+              property: "co2Generated",
+              align: "center",
+            },
+            {
+              label: "benchmark (CO2)",
+              property: "benchmark",
+              align: "center",
+            },
+            {
+              label: "actual vs bench",
+              property: "actualVsBenchmark",
+              align: "center",
+            },
+            {
+              label: "actual vs bench",
+              property: "actualVsBenchmarkPercentage",
+              align: "center",
+            },
+            {
+              label: "actual vs PY",
+              property: "actualVsPreviousYear",
+              align: "center",
+            },
+            {
+              label: "actual vs PY",
+              property: "actualVsPreviousYearPercentage",
+              align: "center",
+            },
+          ],
+
+          datas: [
+            {
+              engineType: {
+                label: "",
+                options: { backgroundColor: "#ffd965", backgroundOpacity: 1 },
+              },
+              co2Average: {
+                label: "bold:avg (g/km CO2)",
+                options: { fontSize: 5 },
+              },
+              carCount: { label: "bold:q.ty", options: { fontSize: 5 } },
+              carCountVsPY: { label: "bold:q.ty", options: { fontSize: 5 } },
+              recordedKm: { label: "bold:km", options: { fontSize: 5 } },
+              co2Generated: {
+                label: "bold:g of CO2",
+                options: { fontSize: 5 },
+              },
+              benchmark: { label: "bold:g of CO2", options: { fontSize: 5 } },
+              actualVsBenchmark: {
+                label: "bold:g of CO2",
+                options: { fontSize: 5 },
+              },
+              actualVsBenchmarkPercentage: {
+                label: "bold:%",
+                options: { fontSize: 5 },
+              },
+              actualVsPreviousYear: {
+                label: "bold:g of CO2",
+                options: { fontSize: 5 },
+              },
+              actualVsPreviousYearPercentage: {
+                label: "bold:%",
+                options: { fontSize: 5 },
+              },
+            },
+            ...engineTypes.map((engineType) => {
+              const co2Average = Math.floor(Math.random() * 10 + 1);
+              const recordedKm = Math.floor(Math.random() * 100000 + 50000);
+              const co2Generated = co2Average * recordedKm;
+              const benchmark = worstCaseBenchmark * recordedKm;
+              const actualVsBenchmark = benchmark - co2Generated;
+              const actualVsBenchmarkPercentage = Math.round(
+                (actualVsBenchmark / benchmark) * 100
+              );
+              return {
+                engineType: {
+                  label: `${engineType}`,
+                  options: { backgroundColor: "#ffd965", backgroundOpacity: 1 },
+                },
+                co2Average,
+                carCount: Math.floor(Math.random() * 11),
+                carCountVsPY: "N/A",
+                recordedKm: recordedKm.toLocaleString("en-US"),
+                co2Generated: co2Generated.toLocaleString("en-US"),
+                benchmark: benchmark.toLocaleString("en-US"),
+                actualVsBenchmark: actualVsBenchmark.toLocaleString("en-US"),
+                actualVsBenchmarkPercentage: `${actualVsBenchmarkPercentage}%`,
+                actualVsPreviousYear: "N/A",
+                actualVsPreviousYearPercentage: "N/A",
+              };
+            }),
+          ],
+          rows: [],
+          headersFontSize: 7,
+          rowsFontSize: 8,
         },
       },
     },

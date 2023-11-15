@@ -171,7 +171,23 @@ export default class PdfGenerator {
           await this.drawChart(options.chartConfiguration, options.table);
           break;
         case PdfGenerationSectionType.TABLE:
+          if (this.doc.y + 60 + options.table.rows.length * 10 > CONTENT_HEIGHT)
+            this.doc.addPage({ size: "A4" });
           await this.doc.table(options.table, {
+            prepareHeader: () =>
+              this.doc
+                .font(options.table.headersFont ?? "Helvetica-Bold")
+                .fontSize(
+                  options.table.fontSize ?? options.table.headersFontSize ?? 8
+                ),
+            prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => {
+              this.doc
+                .font(options.table.font ?? "Helvetica")
+                .fontSize(
+                  options.table.fontSize ?? options.table.rowsFontSize ?? 8
+                );
+              return this.doc;
+            },
           });
           break;
         case PdfGenerationSectionType.IMAGE:
