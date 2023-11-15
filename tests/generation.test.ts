@@ -85,7 +85,8 @@ test("generate pdf", async () => {
     {
       type: PdfGenerationSectionType.MARKDOWN,
       options: {
-        content: "#MarkDown Title\n\n_some italic text_\n\n**some strong text**",
+        content:
+          "#MarkDown Title\n\n_some italic text_\n\n**some strong text**",
       },
     },
     { type: PdfGenerationSectionType.EMPTY_LINES, options: { amount: 2 } },
@@ -115,6 +116,21 @@ test("generate pdf", async () => {
             ],
           },
           options: {},
+        },
+      },
+    },
+    {
+      type: PdfGenerationSectionType.TABLE,
+      options: {
+        table: {
+          title: "Gender distribution 2",
+          subtitle: "Office employees",
+          headers: ["Gender", "Employees"],
+          rows: [
+            ["Male", 189],
+            ["Female", 534],
+            ["Other", 237],
+          ],
         },
       },
     },

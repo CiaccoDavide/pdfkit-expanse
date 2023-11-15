@@ -22,6 +22,7 @@ export enum PdfGenerationSectionType {
   IMAGE = "image",
   EMPTY_LINES = "emptyLines",
   SKIP_TO_NEW_PAGE = "skipToNewPage",
+  TABLE = "table",
 }
 
 export interface Table {
@@ -86,9 +87,9 @@ export default class PdfGenerator {
     // let x = this.doc.x;
     let y = this.doc.y;
 
-    const chartWidth = 300;
-    const chartHeight = 300;
-    const renderedChartWidth = CONTENT_WIDTH / 2;
+    const chartWidth = 150;
+    const chartHeight = 150;
+    const renderedChartWidth = CONTENT_WIDTH / 3;
     const renderedChartHeight = (chartHeight * renderedChartWidth) / chartWidth;
 
     // If the chart does not fit on the page, add a new page
@@ -104,14 +105,14 @@ export default class PdfGenerator {
     });
 
     // move pdfkit cursor to the bottom of the chart
-    this.doc.fontSize((renderedChartHeight / 3) * 2);
+    this.doc.fontSize(renderedChartHeight / 1.2);
     this.doc.moveDown();
 
     // Render the chart to an SVG with chartjs-node-canvas
     const chartJSNodeCanvas = new ChartJSNodeCanvas({
       type: "svg",
-      width: chartWidth ,
-      height: chartHeight ,
+      width: chartWidth * 2,
+      height: chartHeight * 2,
     });
 
     const imageBuffer = chartJSNodeCanvas.renderToBufferSync({
@@ -125,12 +126,12 @@ export default class PdfGenerator {
     });
     const svg = imageBuffer
       .toString("utf8")
-      .replace(`width="${chartWidth}pt" height="${chartHeight}pt"`, "");
+      .replace(`width="${chartWidth * 2}pt" height="${chartHeight * 2}pt"`, "");
 
     // Insert the SVG into the PDF
     SVGtoPDF(this.doc, svg, 320, y, {
-      width: renderedChartWidth,
-      height: renderedChartHeight,
+      width: renderedChartWidth * 2,
+      height: renderedChartHeight * 2,
     });
 
     // reset font size
@@ -168,6 +169,10 @@ export default class PdfGenerator {
           break;
         case PdfGenerationSectionType.CHART:
           await this.drawChart(options.chartConfiguration, options.table);
+          break;
+        case PdfGenerationSectionType.TABLE:
+          await this.doc.table(options.table, {
+          });
           break;
         case PdfGenerationSectionType.IMAGE:
           this.doc.image(options.image, {
