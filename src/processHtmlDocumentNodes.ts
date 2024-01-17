@@ -141,7 +141,9 @@ const processNodes = async (
         case "b":
         case "strong":
           doc.font(FONT_BOLD);
-          await processNodes(node.childNodes, doc);
+          await processNodes(node.childNodes, doc, {
+            continued: true
+          });
           doc.font(FONT_DEFAULT);
           break;
 
