@@ -73,7 +73,7 @@ export default class PdfGenerator {
       this.htmlStyles(this.textColor, this.primaryColor, this.secondaryColor)
     );
 
-    await processHtmlDocumentNodes(parsedHtmlDocument, this.doc);
+    await processHtmlDocumentNodes(parsedHtmlDocument, this.doc, this.textColor);
   }
 
   private async addMarkdownContent(markdown: string) {

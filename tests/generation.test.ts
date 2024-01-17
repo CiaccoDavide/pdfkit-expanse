@@ -261,6 +261,11 @@ test("generate pdf", async () => {
       type: PdfGenerationSectionType.TABLE,
       options: {
         table: {
+          divider: {
+            header: { disabled: false, width: 0.5, opacity: 0.5 },
+            horizontal: { disabled: false, width: 5, opacity: 1 },
+            vertical: { disabled: false, width: 0.5, opacity: 0.5 },
+          },
           headers: [
             { label: "auto", property: "engineType", align: "center" },
             { label: "", property: "co2Average", align: "center" },
@@ -346,7 +351,11 @@ test("generate pdf", async () => {
               return {
                 engineType: {
                   label: `${engineType}`,
-                  options: { backgroundColor: "#ffd965", backgroundOpacity: 1 },
+                  options: {
+                    backgroundColor: "#ffd965",
+                    backgroundOpacity: 1,
+                    separation: true,
+                  },
                 },
                 co2Average,
                 carCount: Math.floor(Math.random() * 11),

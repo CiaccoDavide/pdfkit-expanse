@@ -34,7 +34,7 @@ const FONT_SIZES = {
   p: 12,
   small: 10,
 };
-const DEFAULT_COLOR = "#000000";
+let DEFAULT_COLOR = "#000000";
 
 const cssProcessor = postcss();
 
@@ -90,83 +90,87 @@ const processNodes = async (
 ) => {
   let index = 0;
   for (const node of nodes) {
-    switch (node.nodeName) {
-      // text nodes
-      case "#text":
-        doc.text((node as TextNode).value, {
-          continued: index < nodes.length - 1,
-          oblique: false,
-          ...options,
-        });
-        break;
+    try {
+      switch (node.nodeName) {
+        // text nodes
+        case "#text":
+          doc.text((node as TextNode).value, {
+            continued: index < nodes.length - 1,
+            oblique: false,
+            ...options,
+          });
+          break;
 
-      // heading nodes
-      case "h1":
-      case "h2":
-      case "h3":
-      case "h4":
-      case "h5":
-      case "h6":
-      case "p":
-      case "small":
-        doc.fontSize(FONT_SIZES[node.nodeName]);
+        // heading nodes
+        case "h1":
+        case "h2":
+        case "h3":
+        case "h4":
+        case "h5":
+        case "h6":
+        case "p":
+        case "small":
+          doc.fontSize(FONT_SIZES[node.nodeName]);
 
-        const { textOptions, otherOptions } = await getStyleOptions(node);
-        if (otherOptions.color) {
-          doc.fillColor(otherOptions.color);
-        }
+          const { textOptions, otherOptions } = await getStyleOptions(node);
+          if (otherOptions.color) {
+            doc.fillColor(otherOptions.color);
+          }
 
-        await processNodes(node.childNodes, doc, {
-          continued: true,
-          ...textOptions,
-        });
-        doc.text("\n");
-        doc.fontSize(FONT_SIZES.p);
+          await processNodes(node.childNodes, doc, {
+            continued: true,
+            ...textOptions,
+          });
+          doc.text("\n");
+          doc.fontSize(FONT_SIZES.p);
 
-        if (otherOptions.color) {
-          doc.fillColor(DEFAULT_COLOR);
-        }
-        break;
+          if (otherOptions.color) {
+            doc.fillColor(DEFAULT_COLOR);
+          }
+          break;
 
-      // italic nodes
-      case "i":
-      case "em":
-        await processNodes(node.childNodes, doc, {
-          continued: true,
-          oblique: true,
-        });
-        break;
+        // italic nodes
+        case "i":
+        case "em":
+          await processNodes(node.childNodes, doc, {
+            continued: true,
+            oblique: true,
+          });
+          break;
 
-      case "b":
-      case "strong":
-        doc.font(FONT_BOLD);
-        await processNodes(node.childNodes, doc);
-        doc.font(FONT_DEFAULT);
-        break;
+        case "b":
+        case "strong":
+          doc.font(FONT_BOLD);
+          await processNodes(node.childNodes, doc);
+          doc.font(FONT_DEFAULT);
+          break;
 
-      // line break nodes
-      case "br":
-        doc.text("\n");
-        break;
+        // line break nodes
+        case "br":
+          doc.text("\n");
+          break;
 
-      // unordered list nodes
-      case "ul":
-        await processNodes(node.childNodes, doc);
-        break;
+        // unordered list nodes
+        case "ul":
+          await processNodes(node.childNodes, doc);
+          break;
 
-      // list item nodes
-      case "li":
-        doc.list([(node.childNodes[0] as TextNode).value], {
-          bulletRadius: 2,
-        });
-        break;
+        // list item nodes
+        case "li":
+          doc.list([(node.childNodes[0] as TextNode).value], {
+            bulletRadius: 2,
+          });
+          break;
 
-      // unsupported nodes could contain text nodes
-      default:
-        if ((node as Element).childNodes) {
-          await processNodes((node as Element).childNodes, doc);
-        }
-        break;
+        // unsupported nodes could contain text nodes
+        default:
+          if ((node as Element).childNodes) {
+            await processNodes((node as Element).childNodes, doc);
+          }
+          break;
+      }
+    } catch (error) {
+      console.error("Error processing node:", { node, error });
     }
     index++;
   }
@@ -174,8 +178,10 @@ const processNodes = async (
 
 export const processHtmlDocumentNodes = async (
   document: Document,
-  pdfKitDocument: PDFDocument
+  pdfKitDocument: PDFDocument,
+  textColor: string
 ) => {
+  DEFAULT_COLOR = textColor;
   const html = document.childNodes.find((node) => node.nodeName === "html");
 
   if (!html) {
