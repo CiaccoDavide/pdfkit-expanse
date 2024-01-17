@@ -89,10 +89,12 @@ test("generate pdf", async () => {
       type: PdfGenerationSectionType.MARKDOWN,
       options: {
         content:
-          "#MarkDown Title\n\n_some italic text_\n\n**some strong text**",
+          "#MarkDown Title\n\n_some italic text_\n\n**some strong text**\n\n#####Gender distribution\n\n####Gender distribution\n\n######Gender distribution",
       },
     },
     { type: PdfGenerationSectionType.EMPTY_LINES, options: { amount: 2 } },
+    { type: PdfGenerationSectionType.TEXT, options: { content: "Gender distribution", fontSize: 12, weight: 800}, },
+    { type: PdfGenerationSectionType.HTML, options: { content: "<b>Gender distribution</b>"}, },
     {
       type: PdfGenerationSectionType.CHART,
       options: {

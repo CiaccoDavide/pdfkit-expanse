@@ -93,7 +93,8 @@ export default class PdfGenerator {
     const renderedChartHeight = (chartHeight * renderedChartWidth) / chartWidth;
 
     // If the chart does not fit on the page, add a new page
-    if (y + renderedChartHeight > CONTENT_HEIGHT + PAGE_MARGIN) {
+    // todo: add option to choose between adding a new page or let the table split
+    if (y + renderedChartHeight > CONTENT_HEIGHT) {
       this.doc.addPage({ size: "A4" });
       // x = this.doc.x;
       y = this.doc.y;
