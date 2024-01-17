@@ -1,6 +1,6 @@
 {
   "name": "pdfkit-expanse",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Easy PDF generation for NodeJS",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

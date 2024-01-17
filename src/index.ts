@@ -73,7 +73,11 @@ export default class PdfGenerator {
       this.htmlStyles(this.textColor, this.primaryColor, this.secondaryColor)
     );
 
-    await processHtmlDocumentNodes(parsedHtmlDocument, this.doc, this.textColor);
+    await processHtmlDocumentNodes(
+      parsedHtmlDocument,
+      this.doc,
+      this.textColor
+    );
   }
 
   private async addMarkdownContent(markdown: string) {
@@ -93,8 +97,7 @@ export default class PdfGenerator {
     const renderedChartHeight = (chartHeight * renderedChartWidth) / chartWidth;
 
     // If the chart does not fit on the page, add a new page
-    // todo: add option to choose between adding a new page or let the table split
-    if (y + renderedChartHeight > CONTENT_HEIGHT) {
+    if (y + renderedChartHeight > CONTENT_HEIGHT + PAGE_MARGIN) {
       this.doc.addPage({ size: "A4" });
       // x = this.doc.x;
       y = this.doc.y;
@@ -172,7 +175,25 @@ export default class PdfGenerator {
           await this.drawChart(options.chartConfiguration, options.table);
           break;
         case PdfGenerationSectionType.TABLE:
-          if (this.doc.y + 60 + options.table.rows.length * 10 > CONTENT_HEIGHT)
+          // If the table does not fit on the page, add a new page
+          // todo: add option to choose between adding a new page or let the table split
+
+          //   console.log(">", options.table.title,
+          //     options.table.rows?.length,
+          //     options.table.datas?.length,
+          //     this.doc.y +
+          //       60 +
+          //       (options.table.rows.length || options.table.datas.length) *
+          //         12,
+          //     CONTENT_HEIGHT
+          //   );
+
+          if (
+            this.doc.y +
+              60 +
+              (options.table.rows.length || options.table.datas.length) * 10 >
+            CONTENT_HEIGHT
+          )
             this.doc.addPage({ size: "A4" });
           await this.doc.table(options.table, {
             prepareHeader: () =>
