@@ -5,7 +5,10 @@ import SVGtoPDF from "svg-to-pdfkit";
 import { Converter } from "showdown";
 import { PassThrough } from "stream";
 import { parseHtml } from "./parseHtml";
-import { processHtmlDocumentNodes } from "./processHtmlDocumentNodes";
+import {
+  FONT_DEFAULT,
+  processHtmlDocumentNodes,
+} from "./processHtmlDocumentNodes";
 
 export const PAGE_WIDTH = 595;
 export const PAGE_HEIGHT = PAGE_WIDTH * 1.414;
@@ -142,6 +145,12 @@ export default class PdfGenerator {
     this.doc.fontSize(DEFAULT_FONT_SIZE);
   }
 
+  private resetFont() {
+    this.doc.font(FONT_DEFAULT);
+    this.doc.fillColor(this.textColor);
+    this.doc.fontSize(DEFAULT_FONT_SIZE);
+  }
+
   async generateReport({
     textColor,
     primaryColor,
@@ -193,8 +202,10 @@ export default class PdfGenerator {
               60 +
               (options.table.rows.length || options.table.datas.length) * 10 >
             CONTENT_HEIGHT
-          )
+          ) {
             this.doc.addPage({ size: "A4" });
+          }
+
           await this.doc.table(options.table, {
             prepareHeader: () =>
               this.doc
@@ -229,6 +240,8 @@ export default class PdfGenerator {
         default:
           throw new Error(`Unknown section type: ${type}`);
       }
+
+      this.resetFont();
     }
 
     this.doc.end();

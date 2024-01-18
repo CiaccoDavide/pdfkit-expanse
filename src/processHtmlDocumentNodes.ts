@@ -22,7 +22,7 @@ type StyleOptions = {
   otherOptions: OtherStyleOptions;
 };
 
-const FONT_DEFAULT = "Helvetica";
+export const FONT_DEFAULT = "Helvetica";
 const FONT_BOLD = "Helvetica-Bold";
 const FONT_SIZES = {
   h1: 24,
