@@ -33,6 +33,7 @@ export interface Table {
   subtitle?: string;
   headers?: string[];
   rows?: string[][];
+  datas?: any[];
 }
 
 export type PdfGenerationSection = {
@@ -99,8 +100,13 @@ export default class PdfGenerator {
     const renderedChartWidth = CONTENT_WIDTH / 3;
     const renderedChartHeight = (chartHeight * renderedChartWidth) / chartWidth;
 
-    // If the chart does not fit on the page, add a new page
-    if (y + renderedChartHeight > CONTENT_HEIGHT + PAGE_MARGIN) {
+    // If the chart or the table does not fit on the page, add a new page
+    const isChartOverflowing =
+      y + renderedChartHeight > CONTENT_HEIGHT + PAGE_MARGIN;
+    const isTableOverflowing =
+      this.doc.y + 60 + (table.rows?.length || table.datas?.length || 0) * 10 >
+      CONTENT_HEIGHT;
+    if (isChartOverflowing || isTableOverflowing) {
       this.doc.addPage({ size: "A4" });
       // x = this.doc.x;
       y = this.doc.y;
