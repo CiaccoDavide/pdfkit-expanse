@@ -6,6 +6,7 @@ import {
 } from "parse5/dist/tree-adapters/default";
 import PDFDocument from "pdfkit-table";
 import postcss from "postcss";
+import { FONT_BOLD, FONT_DEFAULT } from ".";
 
 type CssDeclaration = {
   prop: string;
@@ -22,8 +23,6 @@ type StyleOptions = {
   otherOptions: OtherStyleOptions;
 };
 
-export const FONT_DEFAULT = "Helvetica";
-const FONT_BOLD = "Helvetica-Bold";
 const FONT_SIZES = {
   h1: 24,
   h2: 22,
@@ -82,6 +81,20 @@ const getStyleOptions = async (node: ChildNode): Promise<StyleOptions> => {
     otherOptions,
   };
 };
+
+const addHorizontalRule = (doc: PDFDocument, spaceFromEdge = 0, linesAboveAndBelow = 0.5) => {
+  doc.moveDown(linesAboveAndBelow);
+  doc.strokeColor('#eeeeee');
+  doc.moveTo(0 + spaceFromEdge, doc.y)
+    .lineTo(doc.page.width - spaceFromEdge, doc.y)
+    .stroke();
+
+  doc.moveDown(linesAboveAndBelow);
+
+  doc.strokeColor(DEFAULT_COLOR);
+  
+  return doc
+}
 
 const processNodes = async (
   nodes: ChildNode[],
@@ -163,6 +176,9 @@ const processNodes = async (
             bulletRadius: 2,
           });
           break;
+
+        case "hr":
+          addHorizontalRule(doc, 70, 2);
 
         // unsupported nodes could contain text nodes
         default:

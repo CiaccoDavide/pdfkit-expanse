@@ -5,11 +5,11 @@ import SVGtoPDF from "svg-to-pdfkit";
 import { Converter } from "showdown";
 import { PassThrough } from "stream";
 import { parseHtml } from "./parseHtml";
-import {
-  FONT_DEFAULT,
-  processHtmlDocumentNodes,
-} from "./processHtmlDocumentNodes";
+import { processHtmlDocumentNodes } from "./processHtmlDocumentNodes";
+import path from "path";
 
+export var FONT_DEFAULT = "Arial";
+export var FONT_BOLD = "Helvetica-Bold";
 export const PAGE_WIDTH = 595;
 export const PAGE_HEIGHT = PAGE_WIDTH * 1.414;
 export const PAGE_MARGIN = 72;
@@ -48,6 +48,11 @@ export interface PdfGenerationInput {
   sections: PdfGenerationSection[];
 }
 
+export interface PdfGeneratorGlobalSettings {
+  defaultFontFamily?: string;
+  defaultFontFamilyBold?: string;
+}
+
 export default class PdfGenerator {
   private doc: PDFDocument;
   private stream: PassThrough;
@@ -64,11 +69,26 @@ export default class PdfGenerator {
   ) =>
     `p{color:${textColor};}h1,.arch{color:${primaryColor};}h2,h3,h4,h5{color:${secondaryColor};}`;
 
-  constructor() {
+  constructor({
+    defaultFontFamily = "Helvetica",
+    defaultFontFamilyBold = "Helvetica-Bold",
+  } = {}) {
     this.doc = new PDFDocument({ size: "A4" });
+    FONT_DEFAULT = defaultFontFamily;
+    FONT_BOLD = defaultFontFamilyBold;
+    if (defaultFontFamily === "Arial" || defaultFontFamilyBold === "Arial") {
+      this.doc.registerFont(
+        "Arial",
+        path.join(__dirname, "../assets/Arial.ttf")
+      );
+    }
     this.stream = new PassThrough();
     this.doc.pipe(this.stream);
     this.markdownConverter = new Converter();
+  }
+
+  getPDFDocument() {
+    return this.doc;
   }
 
   private async addHtmlContent(htmlContent: string) {
@@ -91,7 +111,7 @@ export default class PdfGenerator {
     await this.addHtmlContent(html);
   }
 
-  private async drawChart(configuration: ChartConfiguration, table: Table) {
+  private async drawChart(configuration: ChartConfiguration, table?: Table) {
     // let x = this.doc.x;
     let y = this.doc.y;
 
@@ -104,22 +124,27 @@ export default class PdfGenerator {
     const isChartOverflowing =
       y + renderedChartHeight > CONTENT_HEIGHT + PAGE_MARGIN;
     const isTableOverflowing =
+      table && // if there is no table, it can't overflow
       this.doc.y + 60 + (table.rows?.length || table.datas?.length || 0) * 10 >
-      CONTENT_HEIGHT;
+        CONTENT_HEIGHT;
+
     if (isChartOverflowing || isTableOverflowing) {
       this.doc.addPage({ size: "A4" });
       // x = this.doc.x;
       y = this.doc.y;
     }
 
-    // render table
-    this.doc.table(table, {
-      width: 220,
-    });
+    if (table) {
+      // render table
+      this.doc.table(table, {
+        width: 220,
+      });
+    }
 
     // move pdfkit cursor to the bottom of the chart
-    this.doc.fontSize(renderedChartHeight / 1.2);
+    this.doc.fontSize(renderedChartHeight / (table ? 1.2 : 1.4));
     this.doc.moveDown();
+    if (!table) this.doc.text(" ");
 
     // Render the chart to an SVG with chartjs-node-canvas
     const chartJSNodeCanvas = new ChartJSNodeCanvas({
@@ -142,7 +167,7 @@ export default class PdfGenerator {
       .replace(`width="${chartWidth * 2}pt" height="${chartHeight * 2}pt"`, "");
 
     // Insert the SVG into the PDF
-    SVGtoPDF(this.doc, svg, 320, y, {
+    SVGtoPDF(this.doc, svg, 320 - (table ? 0 : 135), y, {
       width: renderedChartWidth * 2,
       height: renderedChartHeight * 2,
     });
@@ -215,13 +240,13 @@ export default class PdfGenerator {
           await this.doc.table(options.table, {
             prepareHeader: () =>
               this.doc
-                .font(options.table.headersFont ?? "Helvetica-Bold")
+                .font(options.table.headersFont ?? FONT_BOLD)
                 .fontSize(
                   options.table.fontSize ?? options.table.headersFontSize ?? 8
                 ),
             prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => {
               this.doc
-                .font(options.table.font ?? "Helvetica")
+                .font(options.table.font ?? FONT_DEFAULT)
                 .fontSize(
                   options.table.fontSize ?? options.table.rowsFontSize ?? 8
                 );
@@ -254,8 +279,14 @@ export default class PdfGenerator {
     return this.stream;
   }
 
-  static async generateReport(input: PdfGenerationInput): Promise<PassThrough> {
-    const generator = new PdfGenerator();
+  static async generateReport(
+    input: PdfGenerationInput,
+    globalSettings?: PdfGeneratorGlobalSettings
+  ): Promise<PassThrough> {
+    const generator = new PdfGenerator({
+      defaultFontFamily: globalSettings?.defaultFontFamily ?? FONT_DEFAULT,
+      defaultFontFamilyBold: globalSettings?.defaultFontFamilyBold ?? FONT_BOLD,
+    });
     return generator.generateReport(input);
   }
 }
