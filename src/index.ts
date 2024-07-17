@@ -8,8 +8,18 @@ import { parseHtml } from "./parseHtml";
 import { processHtmlDocumentNodes } from "./processHtmlDocumentNodes";
 import path from "path";
 
-export var FONT_DEFAULT = "Arial";
-export var FONT_BOLD = "Helvetica-Bold";
+export enum SupportedFonts {
+  Arial = "Arial",
+  Calibri = "Calibri",
+  CalibriBold = "Calibri Bold",
+  Inter = "Inter Regular",
+  InterBold = "Inter Bold",
+  Helvetica = "Helvetica",
+  HelveticaBold = "Helvetica-Bold",
+}
+
+export var FONT_DEFAULT: SupportedFonts = SupportedFonts.Helvetica;
+export var FONT_BOLD: SupportedFonts = SupportedFonts.HelveticaBold;
 export const PAGE_WIDTH = 595;
 export const PAGE_HEIGHT = PAGE_WIDTH * 1.414;
 export const PAGE_MARGIN = 72;
@@ -49,8 +59,8 @@ export interface PdfGenerationInput {
 }
 
 export interface PdfGeneratorGlobalSettings {
-  defaultFontFamily?: string;
-  defaultFontFamilyBold?: string;
+  defaultFontFamily?: SupportedFonts;
+  defaultFontFamilyBold?: SupportedFonts;
 }
 
 export default class PdfGenerator {
@@ -70,8 +80,8 @@ export default class PdfGenerator {
     `p{color:${textColor};}h1,.arch{color:${primaryColor};}h2,h3,h4,h5{color:${secondaryColor};}`;
 
   constructor({
-    defaultFontFamily = "Helvetica",
-    defaultFontFamilyBold = "Helvetica-Bold",
+    defaultFontFamily = SupportedFonts.Helvetica,
+    defaultFontFamilyBold = SupportedFonts.HelveticaBold,
   } = {}) {
     this.doc = new PDFDocument({ size: "A4" });
     FONT_DEFAULT = defaultFontFamily;
@@ -79,7 +89,31 @@ export default class PdfGenerator {
     if (defaultFontFamily === "Arial" || defaultFontFamilyBold === "Arial") {
       this.doc.registerFont(
         "Arial",
-        path.join(__dirname, "../assets/Arial.ttf")
+        path.join(__dirname, "../assets/fonts/Arial.ttf")
+      );
+    }
+    if (defaultFontFamily === "Calibri" || defaultFontFamilyBold === "Calibri") {
+      this.doc.registerFont(
+        "Calibri",
+        path.join(__dirname, "../assets/fonts/Calibri.ttf")
+      );
+    }
+    if (defaultFontFamily === "Calibri Bold" || defaultFontFamilyBold === "Calibri Bold") {
+      this.doc.registerFont(
+        "Calibri Bold",
+        path.join(__dirname, "../assets/fonts/CalibriBold.ttf")
+      );
+    }
+    if (defaultFontFamily === SupportedFonts.Inter || defaultFontFamilyBold === SupportedFonts.Inter) {
+      this.doc.registerFont(
+        "Inter Regular",
+        path.join(__dirname, "../assets/fonts/Inter-Regular.ttf")
+      );
+    }
+    if (defaultFontFamily === "Inter Bold" || defaultFontFamilyBold === "Inter Bold") {
+      this.doc.registerFont(
+        "Inter Bold",
+        path.join(__dirname, "../assets/fonts/Inter-Bold.ttf")
       );
     }
     this.stream = new PassThrough();
@@ -88,7 +122,7 @@ export default class PdfGenerator {
   }
 
   getPDFDocument() {
-    return this.doc;
+    return this.doc as PDFKit.PDFDocument;
   }
 
   private async addHtmlContent(htmlContent: string) {
@@ -188,6 +222,7 @@ export default class PdfGenerator {
     secondaryColor,
     sections,
   }: PdfGenerationInput): Promise<PassThrough> {
+    this.resetFont(); // init font
     this.textColor = textColor ?? "#000000";
     this.primaryColor = primaryColor ?? "#13937f";
     this.secondaryColor = secondaryColor ?? "#a27222";
