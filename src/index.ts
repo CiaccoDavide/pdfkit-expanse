@@ -93,7 +93,7 @@ export default class PdfGenerator {
     customDirname = __dirname,
   }: PdfGeneratorGlobalSettings = {}) {
     this.doc = new PDFDocumentWithTables({ size: "A4" });
-    console.log("customDirname", customDirname);
+
     this.firefoxCss = fs.readFileSync(
       path.join(customDirname, "../assets/firefox-html.css"),
       "utf-8"
