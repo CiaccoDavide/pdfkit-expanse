@@ -4,9 +4,9 @@ import {
   Element,
   TextNode,
 } from "parse5/dist/tree-adapters/default";
-import PDFDocument from "pdfkit-table";
 import postcss from "postcss";
-import { FONT_BOLD, FONT_DEFAULT } from ".";
+import PdfGenerator from ".";
+import PDFDocumentWithTables from "./pdfKitTable";
 
 type CssDeclaration = {
   prop: string;
@@ -82,7 +82,7 @@ const getStyleOptions = async (node: ChildNode): Promise<StyleOptions> => {
   };
 };
 
-const addHorizontalRule = (doc: PDFDocument, spaceFromEdge = 0, linesAboveAndBelow = 0.5) => {
+const addHorizontalRule = (doc: PDFDocumentWithTables, spaceFromEdge = 0, linesAboveAndBelow = 0.5) => {
   doc.moveDown(linesAboveAndBelow);
   doc.strokeColor('#eeeeee');
   doc.moveTo(0 + spaceFromEdge, doc.y)
@@ -98,9 +98,10 @@ const addHorizontalRule = (doc: PDFDocument, spaceFromEdge = 0, linesAboveAndBel
 
 const processNodes = async (
   nodes: ChildNode[],
-  doc: PDFDocument,
+  pdfGenerator: PdfGenerator,
   options?: PDFKit.Mixins.TextOptions
 ) => {
+  const doc = pdfGenerator.doc;
   let index = 0;
   for (const node of nodes) {
     try {
@@ -130,7 +131,7 @@ const processNodes = async (
             doc.fillColor(otherOptions.color);
           }
 
-          await processNodes(node.childNodes, doc, {
+          await processNodes(node.childNodes, pdfGenerator, {
             continued: true,
             ...textOptions,
           });
@@ -145,7 +146,7 @@ const processNodes = async (
         // italic nodes
         case "i":
         case "em":
-          await processNodes(node.childNodes, doc, {
+          await processNodes(node.childNodes, pdfGenerator, {
             continued: true,
             oblique: true,
           });
@@ -153,11 +154,11 @@ const processNodes = async (
 
         case "b":
         case "strong":
-          doc.font(FONT_BOLD);
-          await processNodes(node.childNodes, doc, {
+          doc.font(pdfGenerator.FONT_BOLD);
+          await processNodes(node.childNodes, pdfGenerator, {
             continued: true
           });
-          doc.font(FONT_DEFAULT);
+          doc.font(pdfGenerator.FONT_DEFAULT);
           break;
 
         // line break nodes
@@ -167,7 +168,7 @@ const processNodes = async (
 
         // unordered list nodes
         case "ul":
-          await processNodes(node.childNodes, doc);
+          await processNodes(node.childNodes, pdfGenerator);
           break;
 
         // list item nodes
@@ -183,7 +184,7 @@ const processNodes = async (
         // unsupported nodes could contain text nodes
         default:
           if ((node as Element).childNodes) {
-            await processNodes((node as Element).childNodes, doc);
+            await processNodes((node as Element).childNodes, pdfGenerator);
           }
           break;
       }
@@ -196,10 +197,9 @@ const processNodes = async (
 
 export const processHtmlDocumentNodes = async (
   document: Document,
-  pdfKitDocument: PDFDocument,
-  textColor: string
+  pdfGenerator: PdfGenerator,
 ) => {
-  DEFAULT_COLOR = textColor;
+  DEFAULT_COLOR = pdfGenerator.textColor;
   const html = document.childNodes.find((node) => node.nodeName === "html");
 
   if (!html) {
@@ -214,5 +214,5 @@ export const processHtmlDocumentNodes = async (
     return;
   }
 
-  await processNodes((body as Element).childNodes, pdfKitDocument);
+  await processNodes((body as Element).childNodes, pdfGenerator);
 };

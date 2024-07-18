@@ -1,12 +1,16 @@
-import PDFDocument from "pdfkit-table";
 import { ChartConfiguration } from "chart.js";
 import { ChartJSNodeCanvas } from "chartjs-node-canvas";
 import SVGtoPDF from "svg-to-pdfkit";
 import { Converter } from "showdown";
 import { PassThrough } from "stream";
-import { parseHtml } from "./parseHtml";
 import { processHtmlDocumentNodes } from "./processHtmlDocumentNodes";
 import path from "path";
+import fs from "fs";
+import PDFDocumentWithTables from "./pdfKitTable";
+import { load } from "cheerio";
+import juice from "juice";
+import { parse } from "parse5";
+import { Document } from "parse5/dist/tree-adapters/default";
 
 export enum SupportedFonts {
   Arial = "Arial",
@@ -18,8 +22,6 @@ export enum SupportedFonts {
   HelveticaBold = "Helvetica-Bold",
 }
 
-export var FONT_DEFAULT: SupportedFonts = SupportedFonts.Helvetica;
-export var FONT_BOLD: SupportedFonts = SupportedFonts.HelveticaBold;
 export const PAGE_WIDTH = 595;
 export const PAGE_HEIGHT = PAGE_WIDTH * 1.414;
 export const PAGE_MARGIN = 72;
@@ -61,16 +63,22 @@ export interface PdfGenerationInput {
 export interface PdfGeneratorGlobalSettings {
   defaultFontFamily?: SupportedFonts;
   defaultFontFamilyBold?: SupportedFonts;
+  customDirname?: string;
 }
 
 export default class PdfGenerator {
-  private doc: PDFDocument;
-  private stream: PassThrough;
-  private markdownConverter: Converter;
+  FONT_DEFAULT: SupportedFonts = SupportedFonts.Helvetica;
+  FONT_BOLD: SupportedFonts = SupportedFonts.HelveticaBold;
+  doc: PDFDocumentWithTables;
+  stream: PassThrough;
+  markdownConverter: Converter;
 
-  private textColor: string = "#000000";
-  private primaryColor: string = "#000000";
-  private secondaryColor: string = "#000000";
+  firefoxCss: string;
+  w3Css: string;
+
+  textColor: string = "#000000";
+  primaryColor: string = "#000000";
+  secondaryColor: string = "#000000";
 
   private htmlStyles = (
     textColor: string,
@@ -82,38 +90,61 @@ export default class PdfGenerator {
   constructor({
     defaultFontFamily = SupportedFonts.Helvetica,
     defaultFontFamilyBold = SupportedFonts.HelveticaBold,
-  } = {}) {
-    this.doc = new PDFDocument({ size: "A4" });
-    FONT_DEFAULT = defaultFontFamily;
-    FONT_BOLD = defaultFontFamilyBold;
+    customDirname = __dirname,
+  }: PdfGeneratorGlobalSettings = {}) {
+    this.doc = new PDFDocumentWithTables({ size: "A4" });
+    console.log("customDirname", customDirname);
+    this.firefoxCss = fs.readFileSync(
+      path.join(customDirname, "../assets/firefox-html.css"),
+      "utf-8"
+    );
+    this.w3Css = fs.readFileSync(
+      path.join(customDirname, "../assets/w3-css21.css"),
+      "utf-8"
+    );
+
+    this.FONT_DEFAULT = defaultFontFamily;
+    this.FONT_BOLD = defaultFontFamilyBold;
     if (defaultFontFamily === "Arial" || defaultFontFamilyBold === "Arial") {
       this.doc.registerFont(
         "Arial",
-        path.join(__dirname, "../assets/fonts/Arial.ttf")
+        path.join(customDirname, "../assets/fonts/Arial.ttf")
       );
     }
-    if (defaultFontFamily === "Calibri" || defaultFontFamilyBold === "Calibri") {
+    if (
+      defaultFontFamily === "Calibri" ||
+      defaultFontFamilyBold === "Calibri"
+    ) {
       this.doc.registerFont(
         "Calibri",
-        path.join(__dirname, "../assets/fonts/Calibri.ttf")
+        path.join(customDirname, "../assets/fonts/Calibri.ttf")
       );
     }
-    if (defaultFontFamily === "Calibri Bold" || defaultFontFamilyBold === "Calibri Bold") {
+    if (
+      defaultFontFamily === "Calibri Bold" ||
+      defaultFontFamilyBold === "Calibri Bold"
+    ) {
       this.doc.registerFont(
         "Calibri Bold",
-        path.join(__dirname, "../assets/fonts/CalibriBold.ttf")
+        path.join(customDirname, "../assets/fonts/CalibriBold.ttf")
       );
     }
-    if (defaultFontFamily === SupportedFonts.Inter || defaultFontFamilyBold === SupportedFonts.Inter) {
+    if (
+      defaultFontFamily === SupportedFonts.Inter ||
+      defaultFontFamilyBold === SupportedFonts.Inter
+    ) {
       this.doc.registerFont(
         "Inter Regular",
-        path.join(__dirname, "../assets/fonts/Inter-Regular.ttf")
+        path.join(customDirname, "../assets/fonts/Inter-Regular.ttf")
       );
     }
-    if (defaultFontFamily === "Inter Bold" || defaultFontFamilyBold === "Inter Bold") {
+    if (
+      defaultFontFamily === "Inter Bold" ||
+      defaultFontFamilyBold === "Inter Bold"
+    ) {
       this.doc.registerFont(
         "Inter Bold",
-        path.join(__dirname, "../assets/fonts/Inter-Bold.ttf")
+        path.join(customDirname, "../assets/fonts/Inter-Bold.ttf")
       );
     }
     this.stream = new PassThrough();
@@ -125,17 +156,76 @@ export default class PdfGenerator {
     return this.doc as PDFKit.PDFDocument;
   }
 
+  private parseHtml(html: string | Buffer, customCss: string) {
+    const loadedHtml = load(
+      `<style>${this.firefoxCss}</style>` +
+        `<style>${this.w3Css}</style>` +
+        `<style>${customCss}</style>` +
+        html
+    );
+
+    loadedHtml(
+      [
+        "area",
+        "audio",
+        "button",
+        "canvas",
+        "content",
+        "datalist",
+        "details",
+        "dialog",
+        "element",
+        "embed",
+        "head",
+        "img",
+        "input",
+        "legend",
+        "map",
+        "menu",
+        "menuitem",
+        "meta",
+        "meter",
+        "noscript",
+        "optgroup",
+        "options",
+        "output",
+        "progress",
+        "script",
+        "select",
+        "shadow",
+        "source",
+        "summary",
+        "table",
+        "tbody",
+        "td",
+        "template",
+        "th",
+        "thead",
+        "tr",
+        "track",
+        "video",
+      ].join(", ")
+    ).remove();
+
+    // apply all inline styles
+    const htmlWithInlineStyles = juice(loadedHtml.html());
+    // reload html
+    const loadedStyledHtml = load(htmlWithInlineStyles);
+    // remove all style-tag elements
+    loadedStyledHtml("style").remove();
+
+    const parsedHtmlDocument: Document = parse(loadedStyledHtml.html());
+    // return the parsed (by parse5) html document
+    return parsedHtmlDocument;
+  }
+
   private async addHtmlContent(htmlContent: string) {
-    const parsedHtmlDocument = parseHtml(
+    const parsedHtmlDocument = this.parseHtml(
       htmlContent.replace(/\n\s+/g, "\n"), // remove indentation whitespace
       this.htmlStyles(this.textColor, this.primaryColor, this.secondaryColor)
     );
 
-    await processHtmlDocumentNodes(
-      parsedHtmlDocument,
-      this.doc,
-      this.textColor
-    );
+    await processHtmlDocumentNodes(parsedHtmlDocument, this);
   }
 
   private async addMarkdownContent(markdown: string) {
@@ -211,7 +301,7 @@ export default class PdfGenerator {
   }
 
   private resetFont() {
-    this.doc.font(FONT_DEFAULT);
+    this.doc.font(this.FONT_DEFAULT);
     this.doc.fillColor(this.textColor);
     this.doc.fontSize(DEFAULT_FONT_SIZE);
   }
@@ -275,13 +365,13 @@ export default class PdfGenerator {
           await this.doc.table(options.table, {
             prepareHeader: () =>
               this.doc
-                .font(options.table.headersFont ?? FONT_BOLD)
+                .font(options.table.headersFont ?? this.FONT_BOLD)
                 .fontSize(
                   options.table.fontSize ?? options.table.headersFontSize ?? 8
                 ),
             prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => {
               this.doc
-                .font(options.table.font ?? FONT_DEFAULT)
+                .font(options.table.font ?? this.FONT_DEFAULT)
                 .fontSize(
                   options.table.fontSize ?? options.table.rowsFontSize ?? 8
                 );
@@ -318,10 +408,7 @@ export default class PdfGenerator {
     input: PdfGenerationInput,
     globalSettings?: PdfGeneratorGlobalSettings
   ): Promise<PassThrough> {
-    const generator = new PdfGenerator({
-      defaultFontFamily: globalSettings?.defaultFontFamily ?? FONT_DEFAULT,
-      defaultFontFamilyBold: globalSettings?.defaultFontFamilyBold ?? FONT_BOLD,
-    });
+    const generator = new PdfGenerator(globalSettings);
     return generator.generateReport(input);
   }
 }

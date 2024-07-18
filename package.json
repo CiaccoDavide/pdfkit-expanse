@@ -1,7 +1,8 @@
 {
   "name": "pdfkit-expanse",
-  "version": "1.1.3",
+  "version": "1.1.23",
   "description": "Easy PDF generation for NodeJS",
+  "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -9,11 +10,19 @@
     "dist",
     "assets"
   ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "prepublish": "tsup",
     "build": "tsup",
-    "test": "jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
   },
   "repository": {
     "type": "git",
@@ -39,7 +48,7 @@
     "cheerio": "^0.22.0",
     "juice": "^9.1.0",
     "parse5": "^7.1.2",
-    "pdfkit-table": "^0.1.99",
+    "pdfkit": "^0.15.0",
     "postcss": "^8.4.31",
     "showdown": "^2.1.0",
     "stream": "^0.0.2",
