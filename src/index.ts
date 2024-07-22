@@ -17,6 +17,8 @@ export enum SupportedFonts {
   Calibri = "Calibri",
   CalibriBold = "Calibri Bold",
   Inter = "Inter Regular",
+  InterMedium = "Inter Medium",
+  InterSemiBold = "Inter SemiBold",
   InterBold = "Inter Bold",
   Helvetica = "Helvetica",
   HelveticaBold = "Helvetica-Bold",
@@ -113,20 +115,20 @@ export default class PdfGenerator {
       );
     }
     if (
-      defaultFontFamily === "Calibri" ||
-      defaultFontFamilyBold === "Calibri"
+      defaultFontFamily === SupportedFonts.Calibri ||
+      defaultFontFamilyBold === SupportedFonts.Calibri
     ) {
       this.doc.registerFont(
-        "Calibri",
+        SupportedFonts.Calibri,
         path.join(customDirname, "../assets/fonts/Calibri.ttf")
       );
     }
     if (
-      defaultFontFamily === "Calibri Bold" ||
-      defaultFontFamilyBold === "Calibri Bold"
+      defaultFontFamily === SupportedFonts.CalibriBold ||
+      defaultFontFamilyBold === SupportedFonts.CalibriBold
     ) {
       this.doc.registerFont(
-        "Calibri Bold",
+        SupportedFonts.CalibriBold,
         path.join(customDirname, "../assets/fonts/CalibriBold.ttf")
       );
     }
@@ -135,16 +137,34 @@ export default class PdfGenerator {
       defaultFontFamilyBold === SupportedFonts.Inter
     ) {
       this.doc.registerFont(
-        "Inter Regular",
+        SupportedFonts.Inter,
         path.join(customDirname, "../assets/fonts/Inter-Regular.ttf")
       );
     }
     if (
-      defaultFontFamily === "Inter Bold" ||
-      defaultFontFamilyBold === "Inter Bold"
+      defaultFontFamily === SupportedFonts.InterMedium ||
+      defaultFontFamilyBold === SupportedFonts.InterMedium
     ) {
       this.doc.registerFont(
-        "Inter Bold",
+        SupportedFonts.InterMedium,
+        path.join(customDirname, "../assets/fonts/Inter-Medium.ttf")
+      );
+    }
+    if (
+      defaultFontFamily === SupportedFonts.InterSemiBold ||
+      defaultFontFamilyBold === SupportedFonts.InterSemiBold
+    ) {
+      this.doc.registerFont(
+        SupportedFonts.InterSemiBold,
+        path.join(customDirname, "../assets/fonts/Inter-SemiBold.ttf")
+      );
+    }
+    if (
+      defaultFontFamily === SupportedFonts.InterBold ||
+      defaultFontFamilyBold === SupportedFonts.InterBold
+    ) {
+      this.doc.registerFont(
+        SupportedFonts.InterBold,
         path.join(customDirname, "../assets/fonts/Inter-Bold.ttf")
       );
     }
