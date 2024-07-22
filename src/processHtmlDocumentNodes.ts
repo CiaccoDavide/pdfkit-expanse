@@ -82,19 +82,24 @@ const getStyleOptions = async (node: ChildNode): Promise<StyleOptions> => {
   };
 };
 
-const addHorizontalRule = (doc: PDFDocumentWithTables, spaceFromEdge = 0, linesAboveAndBelow = 0.5) => {
+const addHorizontalRule = (
+  doc: PDFDocumentWithTables,
+  spaceFromEdge = 0,
+  linesAboveAndBelow = 0.5
+) => {
   doc.moveDown(linesAboveAndBelow);
-  doc.strokeColor('#eeeeee');
-  doc.moveTo(0 + spaceFromEdge, doc.y)
+  doc.strokeColor("#eeeeee");
+  doc
+    .moveTo(0 + spaceFromEdge, doc.y)
     .lineTo(doc.page.width - spaceFromEdge, doc.y)
     .stroke();
 
   doc.moveDown(linesAboveAndBelow);
 
   doc.strokeColor(DEFAULT_COLOR);
-  
-  return doc
-}
+
+  return doc;
+};
 
 const processNodes = async (
   nodes: ChildNode[],
@@ -124,9 +129,14 @@ const processNodes = async (
         case "h6":
         case "p":
         case "small":
-          doc.fontSize(FONT_SIZES[node.nodeName]);
-
+        case "span":
           const { textOptions, otherOptions } = await getStyleOptions(node);
+          if (node.nodeName !== "span") {
+            doc.fontSize(otherOptions.fontSize || FONT_SIZES[node.nodeName]);
+          } else if (otherOptions.fontSize) {
+            doc.fontSize(otherOptions.fontSize);
+          }
+
           if (otherOptions.color) {
             doc.fillColor(otherOptions.color);
           }
@@ -135,7 +145,10 @@ const processNodes = async (
             continued: true,
             ...textOptions,
           });
-          doc.text("\n");
+
+          if (node.nodeName !== "span") {
+            doc.text("\n");
+          }
           doc.fontSize(FONT_SIZES.p);
 
           if (otherOptions.color) {
@@ -156,7 +169,7 @@ const processNodes = async (
         case "strong":
           doc.font(pdfGenerator.FONT_BOLD);
           await processNodes(node.childNodes, pdfGenerator, {
-            continued: true
+            continued: true,
           });
           doc.font(pdfGenerator.FONT_DEFAULT);
           break;
@@ -179,7 +192,7 @@ const processNodes = async (
           break;
 
         case "hr":
-          addHorizontalRule(doc, 70, 2);
+          addHorizontalRule(doc, 70, 1);
 
         // unsupported nodes could contain text nodes
         default:
@@ -197,7 +210,7 @@ const processNodes = async (
 
 export const processHtmlDocumentNodes = async (
   document: Document,
-  pdfGenerator: PdfGenerator,
+  pdfGenerator: PdfGenerator
 ) => {
   DEFAULT_COLOR = pdfGenerator.textColor;
   const html = document.childNodes.find((node) => node.nodeName === "html");

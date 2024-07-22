@@ -38,6 +38,7 @@ export enum PdfGenerationSectionType {
   EMPTY_LINES = "emptyLines",
   SKIP_TO_NEW_PAGE = "skipToNewPage",
   TABLE = "table",
+  MOVE_UP = "moveUp",
 }
 
 export interface Table {
@@ -321,14 +322,31 @@ export default class PdfGenerator {
       this.doc.fillColor(this.textColor);
 
       const { type, options } = section;
+      const amount = options?.amount || 1;
 
       switch (type) {
         case PdfGenerationSectionType.TEXT:
+          const previousX = this.doc.x;
+          const previousY = this.doc.y;
+          const x = options.x || this.doc.x;
+          const y = options.y || this.doc.y;
+
+          this.doc.font(
+            options.font ?? options.weight === "bold"
+              ? this.FONT_BOLD
+              : this.FONT_DEFAULT
+          );
           this.doc.fillColor(options.color ?? this.textColor);
           this.doc.fontSize(options.fontSize ?? 14);
-          this.doc.text(options.content, {
+          this.doc.text(options.content, x, y, {
             align: options.align ?? "left",
           });
+
+          if (options.x && options.y) {
+            this.doc.x = previousX;
+            this.doc.y = previousY;
+          }
+
           break;
         case PdfGenerationSectionType.MARKDOWN:
           await this.addMarkdownContent(options.content);
@@ -387,8 +405,13 @@ export default class PdfGenerator {
           break;
         case PdfGenerationSectionType.EMPTY_LINES: // adds space until new page
           if (options.fontSize) this.doc.fontSize(options.fontSize);
-          const amount = options.amount || 1;
           this.doc.moveDown(amount);
+          this.doc.fontSize(DEFAULT_FONT_SIZE);
+          break;
+        case PdfGenerationSectionType.MOVE_UP:
+          if (options.fontSize) this.doc.fontSize(options.fontSize);
+          this.doc.moveUp(amount);
+          this.doc.fontSize(DEFAULT_FONT_SIZE);
           break;
         case PdfGenerationSectionType.SKIP_TO_NEW_PAGE:
           this.doc.addPage({ size: "A4" });
