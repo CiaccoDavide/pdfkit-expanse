@@ -1,6 +1,6 @@
 {
   "name": "pdfkit-expanse",
-  "version": "1.1.32",
+  "version": "1.1.35",
   "description": "Easy PDF generation for NodeJS",
   "type": "module",
   "main": "./dist/index.js",
@@ -45,7 +45,7 @@
   "dependencies": {
     "chart.js": "^3.5.1",
     "chartjs-node-canvas": "^4.1.6",
-    "cheerio": "^0.22.0",
+    "cheerio": "1.0.0-rc.12",
     "juice": "^9.1.0",
     "parse5": "^7.1.2",
     "pdfkit": "^0.15.0",
