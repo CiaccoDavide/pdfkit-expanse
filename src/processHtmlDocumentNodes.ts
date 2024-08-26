@@ -34,6 +34,8 @@ const FONT_SIZES = {
   small: 10,
 };
 let DEFAULT_COLOR = "#000000";
+let PRIMARY_COLOR = "#000000";
+let SECONDARY_COLOR = "#000000";
 
 const cssProcessor = postcss();
 
@@ -137,8 +139,16 @@ const processNodes = async (
             doc.fontSize(otherOptions.fontSize);
           }
 
+          let customColorSet = false;
           if (otherOptions.color) {
             doc.fillColor(otherOptions.color);
+            customColorSet = true;
+          } else if (node.nodeName === "h1") {
+            doc.fillColor(PRIMARY_COLOR);
+            customColorSet = true;
+          } else if (node.nodeName.match(/h[2-6]/)) {
+            doc.fillColor(SECONDARY_COLOR);
+            customColorSet = true;
           }
 
           await processNodes(node.childNodes, pdfGenerator, {
@@ -151,7 +161,7 @@ const processNodes = async (
           }
           doc.fontSize(FONT_SIZES.p);
 
-          if (otherOptions.color) {
+          if (customColorSet) {
             doc.fillColor(DEFAULT_COLOR);
           }
           break;
@@ -213,6 +223,8 @@ export const processHtmlDocumentNodes = async (
   pdfGenerator: PdfGenerator
 ) => {
   DEFAULT_COLOR = pdfGenerator.textColor;
+  PRIMARY_COLOR = pdfGenerator.primaryColor;
+  SECONDARY_COLOR = pdfGenerator.secondaryColor;
   const html = document.childNodes.find((node) => node.nodeName === "html");
 
   if (!html) {
