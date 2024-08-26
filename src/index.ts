@@ -385,8 +385,8 @@ export default class PdfGenerator {
   }: PdfGenerationInput): Promise<PassThrough> {
     this.resetFont(); // init font
     this.textColor = textColor ?? "#000000";
-    this.primaryColor = primaryColor ?? "#13937f";
-    this.secondaryColor = secondaryColor ?? "#a27222";
+    this.primaryColor = primaryColor ?? "#000000";
+    this.secondaryColor = secondaryColor ?? "#000000";
 
     this.header = header;
     this.footer = footer;
